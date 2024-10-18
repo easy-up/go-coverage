@@ -1,4 +1,4 @@
-module coverage
+module github.com/easy-up/go-coverage
 
 go 1.20
 
