@@ -126,7 +126,10 @@ func (l Parser) processLcov(reader io.Reader) (Report, error) {
 		} else {
 			l.processLcovLine(line, &report, &fileReport)
 		}
-
+	}
+	if fileReport.Path != "" {
+		// Add last file
+		report.Files = append(report.Files, fileReport)
 	}
 	return report, nil
 }
