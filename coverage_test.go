@@ -7,8 +7,8 @@ import (
 )
 
 func TestLCOV(t *testing.T) {
-	lcovParser := New("./test/lcov.info", LCOV)
-	report, err := lcovParser.Parse()
+	lcovParser := New(LCOV)
+	report, err := lcovParser.Parse("./test/lcov.info")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 67, report.CoveredBranches)
@@ -20,8 +20,8 @@ func TestLCOV(t *testing.T) {
 }
 
 func TestCobertura(t *testing.T) {
-	coberturaParser := New("./test/coverage.xml", COBERTURA)
-	report, err := coberturaParser.Parse()
+	coberturaParser := New(COBERTURA)
+	report, err := coberturaParser.Parse("./test/coverage.xml")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 8, report.TotalLines)
@@ -31,8 +31,8 @@ func TestCobertura(t *testing.T) {
 }
 
 func TestClover(t *testing.T) {
-	cloverParser := New("./test/clover.xml", CLOVER)
-	report, err := cloverParser.Parse()
+	cloverParser := New(CLOVER)
+	report, err := cloverParser.Parse("./test/clover.xml")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 20672, report.TotalLines)

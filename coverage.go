@@ -5,41 +5,42 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 )
 
 // New creates a new lcov parser
-func New(filePath string, mode CoverageMode) Parser {
+func New(mode CoverageMode) Parser {
 	return Parser{
-		path: filePath,
 		mode: mode,
 	}
 }
 
 // Parse parses the lcov file
-func (l Parser) Parse() (Report, error) {
-	switch l.mode {
-	case LCOV:
-		return l.processLcov()
-	case COBERTURA:
-		return l.processCobertura()
-	case CLOVER:
-		return l.processClover()
+func (l Parser) Parse(path string) (Report, error) {
+	reader, err := os.Open(path)
+	if err != nil {
+		return Report{}, fmt.Errorf("coverage.Parse> Unable to open file: %v", err)
 	}
-	return Report{}, fmt.Errorf("coverage.parse> Unknown mode %s", l.mode)
+	defer reader.Close()
+	return l.ParseReader(reader)
 }
 
-func (l Parser) processClover() (Report, error) {
-	file, errF := os.Open(l.path)
-	if errF != nil {
-		return Report{}, fmt.Errorf("coverage.processClover> Unable to open file: %v", errF)
+func (l Parser) ParseReader(reader io.Reader) (Report, error) {
+	switch l.mode {
+	case LCOV:
+		return l.processLcov(reader)
+	case COBERTURA:
+		return l.processCobertura(reader)
+	case CLOVER:
+		return l.processClover(reader)
 	}
-	defer file.Close()
+	return Report{}, fmt.Errorf("coverage.Parse> Unknown mode %s", l.mode)
+}
 
-	b, errR := ioutil.ReadAll(file)
+func (l Parser) processClover(reader io.Reader) (Report, error) {
+	b, errR := io.ReadAll(reader)
 	if errR != nil {
 		return Report{}, fmt.Errorf("coverage.processClover> Unable to read file: %v", errR)
 	}
@@ -77,14 +78,8 @@ func (l Parser) processClover() (Report, error) {
 
 }
 
-func (l Parser) processCobertura() (Report, error) {
-	file, errF := os.Open(l.path)
-	if errF != nil {
-		return Report{}, fmt.Errorf("coverage.processCobertura> Unable to open file: %v", errF)
-	}
-	defer file.Close()
-
-	b, errR := ioutil.ReadAll(file)
+func (l Parser) processCobertura(reader io.Reader) (Report, error) {
+	b, errR := io.ReadAll(reader)
 	if errR != nil {
 		return Report{}, fmt.Errorf("coverage.processCobertura> Unable to read file: %v", errR)
 	}
@@ -103,14 +98,8 @@ func (l Parser) processCobertura() (Report, error) {
 	return report, nil
 }
 
-func (l Parser) processLcov() (Report, error) {
-	file, errF := os.Open(l.path)
-	if errF != nil {
-		return Report{}, fmt.Errorf("coverage.processLcov> Unable to open lcov file: %v", errF)
-	}
-	defer file.Close()
-
-	r := bufio.NewReader(file)
+func (l Parser) processLcov(reader io.Reader) (Report, error) {
+	r := bufio.NewReader(reader)
 
 	report := Report{
 		Files: make([]FileReport, 0),
